@@ -1,51 +1,46 @@
-package com.example.clientmod.event;
+package com.example.clientmod.modules;
 
-import com.example.clientmod.gui.ClickGui;
-import com.example.clientmod.modules.Module;
-import com.example.clientmod.modules.ModuleManager;
-import net.minecraft.client.Minecraft;
-import net.minecraftforge.client.event.RenderWorldLastEvent;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.InputEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent;
-import org.lwjgl.input.Keyboard;
+import java.util.ArrayList;
+import java.util.List;
 
-public class EventManager {
+public class ModuleManager {
 
-    @SubscribeEvent
-    public void onKeyInput(InputEvent.KeyInputEvent event) {
-        Minecraft mc = Minecraft.getMinecraft();
+    private static final List<Module> modules = new ArrayList<>();
 
-        // Right Shift — открыть ClickGUI
-        if (Keyboard.isKeyDown(Keyboard.KEY_RSHIFT)) {
-            if (mc.currentScreen == null) {
-                mc.displayGuiScreen(new ClickGui());
-            }
-        }
+    public static FastPlace fastPlace;
+    public static AntiKnockback antiKnockback;
+    public static PlayerESP playerESP;
+    public static Scaffold scaffold;
+    public static Tracers tracers;
+    public static ShowHeldItem showHeldItem;
 
-        // Привязки модулей
-        if (Keyboard.getEventKeyState()) {
-            int key = Keyboard.getEventKey();
-            for (Module module : ModuleManager.getModules()) {
-                if (module.getKeybind() == key) {
-                    module.toggle();
-                }
-            }
-        }
+    public static void init() {
+        modules.clear();
+
+        fastPlace     = new FastPlace();
+        antiKnockback = new AntiKnockback();
+        playerESP     = new PlayerESP();
+        scaffold      = new Scaffold();
+        tracers       = new Tracers();
+        showHeldItem  = new ShowHeldItem();
+
+        modules.add(fastPlace);
+        modules.add(antiKnockback);
+        modules.add(playerESP);
+        modules.add(scaffold);
+        modules.add(tracers);
+        modules.add(showHeldItem);
     }
 
-    @SubscribeEvent
-    public void onRenderWorld(RenderWorldLastEvent event) {
-        ModuleManager.playerESP.onRenderWorld(event);
+    public static List<Module> getModules() {
+        return modules;
     }
 
-    @SubscribeEvent
-    public void onClientTick(TickEvent.ClientTickEvent event) {
-        if (event.phase != TickEvent.Phase.END) return;
-        Minecraft mc = Minecraft.getMinecraft();
-        if (mc.player == null) return;
-
-        ModuleManager.fastPlace.onTick(mc);
-        ModuleManager.antiKnockback.onTick(mc);
+    public static List<Module> getModulesByCategory(ModuleCategory category) {
+        List<Module> result = new ArrayList<>();
+        for (Module m : modules) {
+            if (m.getCategory() == category) result.add(m);
+        }
+        return result;
     }
 }
