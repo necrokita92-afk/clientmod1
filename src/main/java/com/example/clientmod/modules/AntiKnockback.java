@@ -1,32 +1,49 @@
 package com.example.clientmod.modules;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraftforge.event.entity.living.LivingKnockBackEvent;
 
+/**
+ * Anti-Knockback (клиентская реализация):
+ * Поскольку LivingKnockBackEvent срабатывает только на сервере,
+ * на клиенте мы гасим горизонтальную скорость игрока, если она резко выросла
+ * (что обычно происходит при откидывании).
+ */
 public class AntiKnockback extends Module {
 
     public static Setting percentage;
+
+    /** Порог, при котором считаем, что игрока откинули */
+    private static final double KNOCKBACK_THRESHOLD = 0.15;
 
     public AntiKnockback() {
         super("AntiKnockback", "Снижение откидывания от ударов", ModuleCategory.COMBAT);
         percentage = Setting.integer("Снижение %", 100, 0, 100, this);
     }
 
-    public void onKnockback(LivingKnockBackEvent event) {
-        if (!isEnabled()) return;
-        if (!(event.getEntityLiving() instanceof EntityPlayer)) return;
+    /** Вызывается каждый тик клиента из EventManager */
+    public void onTick(Minecraft mc) {
+        if (!isEnabled() || mc.player == null) return;
 
-        EntityPlayer player = (EntityPlayer) event.getEntityLiving();
-        if (player != net.minecraft.client.Minecraft.getMinecraft().player) return;
+        EntityPlayer player = mc.player;
 
-        float reduction = percentage.intValue / 100.0f;
-        if (reduction >= 1.0f) {
-            event.setCanceled(true);
-        } else if (reduction > 0f) {
-            // В Forge 1.12.2 нет метода setRatio() — гасим скорость вручную
-            event.setCanceled(true);
-            player.motionX *= (1.0f - reduction);
-            player.motionZ *= (1.0f - reduction);
+        // Если игрок сам двигается (нажимает WASD) — не трогаем скорость
+        if (player.moveForward != 0 || player.moveStrafing != 0) return;
+
+        // Проверяем, не придали ли нам горизонтальную скорость извне
+        double horizontalSpeed = Math.sqrt(player.motionX * player.motionX + player.motionZ * player.motionZ);
+
+        if (horizontalSpeed > KNOCKBACK_THRESHOLD) {
+            float reduction = percentage.intValue / 100.0f;
+            if (reduction >= 1.0f) {
+                // Полное гашение горизонтальной скорости
+                player.motionX = 0;
+                player.motionZ = 0;
+            } else if (reduction > 0f) {
+                // Частичное гашение
+                player.motionX *= (1.0f - reduction);
+                player.motionZ *= (1.0f - reduction);
+            }
         }
     }
 }
