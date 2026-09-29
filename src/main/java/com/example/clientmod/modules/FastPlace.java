@@ -10,7 +10,7 @@ import java.lang.reflect.Field;
  * FastPlace / Scaffold:
  * - Сбрасывает задержку установки блоков (rightClickDelayTimer)
  * - Автоматический наклон взгляда вниз при строительстве
- * - Настраиваемая задержка между установками
+ * - Настраиваемая задержка между установками (0-3 тика)
  */
 public class FastPlace extends Module {
 
@@ -18,7 +18,7 @@ public class FastPlace extends Module {
     public static Setting autoAngle;
     public static Setting scaffold;
 
-    /** Счётчик тиков для реализации пользовательской задержки */
+    /** Счётчик тиков для пользовательской задержки */
     private int tickCounter = 0;
 
     public FastPlace() {
@@ -32,7 +32,7 @@ public class FastPlace extends Module {
     public void onTick(Minecraft mc) {
         if (!isEnabled() || mc.player == null || mc.currentScreen != null) return;
 
-        // 1) Автонаклон вниз (Scaffold)
+        // 1) Автонаклон вниз для Scaffold
         if (scaffold.boolValue && autoAngle.boolValue) {
             RayTraceResult result = mc.objectMouseOver;
             if (result == null || result.typeOfHit != RayTraceResult.Type.BLOCK) {
@@ -40,19 +40,22 @@ public class FastPlace extends Module {
             }
         }
 
-        // 2) Ускорение установки: если игрок зажал ПКМ — сбрасываем задержку
+        // 2) Ускорение установки блоков
         if (mc.gameSettings.keyBindUseItem.isKeyDown()) {
             tickCounter++;
-            if (tickCounter >= delay.intValue) {
+            if (tickCounter >= Math.max(1, delay.intValue)) {
                 tickCounter = 0;
                 try {
-                    // rightClickDelayTimer — ванильное поле, отвечающее за паузу между кликами.
-                    // Через reflection получаем доступ и ставим 0, чтобы игра ставила блок сразу.
-                    Field field = ReflectionHelper.findField(Minecraft.class, "rightClickDelayTimer", "field_71467_ac");
+                    // rightClickDelayTimer — ванильное поле паузы между ПКМ
+                    Field field = ReflectionHelper.findField(
+                            Minecraft.class,
+                            "rightClickDelayTimer",
+                            "field_71467_ac"
+                    );
                     field.setAccessible(true);
                     field.setInt(mc, 0);
                 } catch (Exception e) {
-                    // Если поле не найдено — просто игнорируем, чтобы не крашить игру
+                    // Если поле не найдено — не крашим игру
                     e.printStackTrace();
                 }
             }
