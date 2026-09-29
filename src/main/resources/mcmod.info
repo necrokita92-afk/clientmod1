@@ -1,0 +1,9 @@
+[{
+  "modid": "clientmod",
+  "name": "Client Utilities",
+  "description": "Приватный клиентский мод утилит",
+  "version": "1.0.0",
+  "mcversion": "1.12.2",
+  "authorList": ["Private"],
+  "clientSideOnly": true
+}]
