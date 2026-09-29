@@ -1,4 +1,9 @@
-name: Build Mod
+      - name: Clear Gradle cache
+        run: |
+          rm -rf ~/.gradle/caches
+          rm -rf ~/.gradle/wrapper/dists
+          rm -rf ~/.gradle/caches/forge_gradle
+          name: Build Mod
 on:
   push:
     branches: [ main, master ]
