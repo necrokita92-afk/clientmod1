@@ -5,7 +5,6 @@ import com.example.clientmod.modules.Module;
 import com.example.clientmod.modules.ModuleManager;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
-import net.minecraftforge.event.entity.living.LivingKnockBackEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.InputEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
@@ -17,12 +16,14 @@ public class EventManager {
     public void onKeyInput(InputEvent.KeyInputEvent event) {
         Minecraft mc = Minecraft.getMinecraft();
 
+        // Right Shift — открыть ClickGUI
         if (Keyboard.isKeyDown(Keyboard.KEY_RSHIFT)) {
             if (mc.currentScreen == null) {
                 mc.displayGuiScreen(new ClickGui());
             }
         }
 
+        // Привязки модулей
         if (Keyboard.getEventKeyState()) {
             int key = Keyboard.getEventKey();
             for (Module module : ModuleManager.getModules()) {
@@ -39,15 +40,12 @@ public class EventManager {
     }
 
     @SubscribeEvent
-    public void onKnockback(LivingKnockBackEvent event) {
-        ModuleManager.antiKnockback.onKnockback(event);
-    }
-
-    @SubscribeEvent
     public void onClientTick(TickEvent.ClientTickEvent event) {
         if (event.phase != TickEvent.Phase.END) return;
         Minecraft mc = Minecraft.getMinecraft();
         if (mc.player == null) return;
+
         ModuleManager.fastPlace.onTick(mc);
+        ModuleManager.antiKnockback.onTick(mc);
     }
 }
