@@ -54,7 +54,7 @@ public abstract class Module {
         public int intValue;
         public int min;
         public int max;
-        public public String[] options;
+        public String[] options;
         public int enumIndex;
         public final Module parent;
 
